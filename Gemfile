@@ -4,3 +4,4 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'redis'
+#gem 'easy_redis_lock', :git => 'git://github.com/Rigor/easy_redis_lock.git'

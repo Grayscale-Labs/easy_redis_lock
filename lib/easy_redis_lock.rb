@@ -1,10 +1,12 @@
 require "easy_redis_lock/version"
+require 'URI'
+require 'redis'
 
 module EasyRedisLock
   class Gatekeeper
     attr_reader :delay
 
-    REDIS_URL = URI.parse(ENV.fetch('REDIS_URL'))
+    REDIS_URL = URI.parse(ENV.fetch('REDIS_URL') {'redis://localhost:6379'} )
     REDIS_HOST = REDIS_URL.host
     REDIS_PORT = REDIS_URL.port
 
@@ -28,15 +30,13 @@ module EasyRedisLock
     def with_lock delay_id=Time.now.to_i, delay=@seconds_delay, &block
       retries = 0
       begin
-        if should_delay?(delay_id)
+        while should_delay?(delay_id) do
           sleep(delay)
           retries += 1
           expire_lock(delay_id) and return if retries > 30
-          retry
-        else
-          mark_in_progress(delay_id)
-          yield if block_given?
         end
+        mark_in_progress(delay_id)
+        yield if block_given?
       ensure
         expire_lock(delay_id)
       end
