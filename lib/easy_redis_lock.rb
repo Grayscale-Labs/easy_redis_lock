@@ -46,15 +46,15 @@ module EasyRedisLock
     end
 
     def expire_lock delay_id
-      @redis.del("redis_lock:#{delay_id}")
+      @redis.del("easy_redis_lock:#{delay_id}")
     end
 
     def in_progress? delay_id
-      @redis.exists("redis_lock:#{delay_id}")
+      @redis.exists("easy_redis_lock:#{delay_id}")
     end
 
     def set_progress delay_id
-      @redis.setex("redis_lock:#{delay_id}", @lock_time, 1) # auto expires after lock_time seconds (default 30s)
+      @redis.setex("easy_redis_lock:#{delay_id}", @lock_time, 1) # auto expires after lock_time seconds (default 30s)
     end
   end
 end

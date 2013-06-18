@@ -17,7 +17,7 @@ describe EasyRedisLock::GateKeeper do
   end
 
   it "should delay if the lock id exists" do
-    gatekeeper.redis.set("redis_lock:locked_key", 1)
+    gatekeeper.redis.set("easy_redis_lock:locked_key", 1)
     gatekeeper.should_delay?("locked_key").should be_true
   end
 
@@ -27,7 +27,7 @@ describe EasyRedisLock::GateKeeper do
 
   context "#with_lock" do
     it "should sleep the delay time if required" do
-      gatekeeper.redis.set("redis_lock:pop_and_lock", 1)
+      gatekeeper.redis.set("easy_redis_lock:pop_and_lock", 1)
 
       gatekeeper.should_receive(:sleep).at_least(1).times.with(1.0)
       gatekeeper.with_lock("pop_and_lock", 1) {}
@@ -41,13 +41,13 @@ describe EasyRedisLock::GateKeeper do
     it "should locked the key if not locked and unlock after" do
       gatekeeper.should_not_receive(:sleep)
       gatekeeper.with_lock("not_pop_and_lock", 1) {
-        gatekeeper.redis.exists("redis_lock:not_pop_and_lock").should be_true
+        gatekeeper.redis.exists("easy_redis_lock:not_pop_and_lock").should be_true
       }
-      gatekeeper.redis.exists("redis_lock:not_pop_and_lock").should be_false
+      gatekeeper.redis.exists("easy_redis_lock:not_pop_and_lock").should be_false
     end
 
     it "should stop trying after 30 tries" do
-      gatekeeper.redis.set("redis_lock:pop_and_lock", 1)
+      gatekeeper.redis.set("easy_redis_lock:pop_and_lock", 1)
 
       gatekeeper.should_receive(:sleep).exactly(30).times
       gatekeeper.with_lock("pop_and_lock", 1) {}
