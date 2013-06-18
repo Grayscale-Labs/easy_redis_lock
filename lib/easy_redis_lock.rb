@@ -1,5 +1,5 @@
 require "easy_redis_lock/version"
-require 'URI'
+require 'uri'
 require 'redis'
 
 module EasyRedisLock
