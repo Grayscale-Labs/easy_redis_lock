@@ -22,11 +22,8 @@ And then execute:
   ```ruby
   @record = Record.find(99)
   EasyRedisLock::GateKeeper.new.with_lock(@record.id) do
-    if @record.run_count > 5
-      @record.update_attribute(:status, "healthy")
-    else
-      @record.update_attribute(:status, "in progress")
-    end
+    status = @record.run_count > 5 ? "done" : "in progress"
+    @record.update_attribute(:status, status)
   end
   ```
 
