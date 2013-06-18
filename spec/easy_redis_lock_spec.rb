@@ -1,0 +1,58 @@
+require 'spec_helper'
+
+describe EasyRedisLock::GateKeeper do
+
+  let!(:gatekeeper) { EasyRedisLock::GateKeeper.new }
+
+  it "should connect to redis on local if not supplied in ENV" do
+    gatekeeper.send(:redis_options)[:host].should eq("localhost")
+    gatekeeper.send(:redis_options)[:port].should eq(6379)
+  end
+
+  it "should connect to redis provided in ENV['REDIS_URL']" do
+    ENV['REDIS_URL'] = "redis://remotehost:9999"
+    keeper = EasyRedisLock::GateKeeper::new
+    keeper.send(:redis_options)[:host].should eq("remotehost")
+    keeper.send(:redis_options)[:port].should eq(9999)
+  end
+
+  it "should delay if the lock id exists" do
+    gatekeeper.redis.set("redis_lock:locked_key", 1)
+    gatekeeper.should_delay?("locked_key").should be_true
+  end
+
+  it "should not delay if the lock id doesnt exist" do
+    gatekeeper.should_delay?("not_locked_key").should be_false
+  end
+
+  context "#with_lock" do
+    it "should sleep the delay time if required" do
+      gatekeeper.redis.set("redis_lock:pop_and_lock", 1)
+
+      gatekeeper.should_receive(:sleep).at_least(1).times.with(1.0)
+      gatekeeper.with_lock("pop_and_lock", 1) {}
+    end
+
+    it "should not sleep the delay time if not locked" do
+      gatekeeper.should_not_receive(:sleep)
+      gatekeeper.with_lock("not_pop_and_lock", 1) {}
+    end
+
+    it "should locked the key if not locked and unlock after" do
+      gatekeeper.should_not_receive(:sleep)
+      gatekeeper.with_lock("not_pop_and_lock", 1) {
+        gatekeeper.redis.exists("redis_lock:not_pop_and_lock").should be_true
+      }
+      gatekeeper.redis.exists("redis_lock:not_pop_and_lock").should be_false
+    end
+
+    it "should stop trying after 30 tries" do
+      gatekeeper.redis.set("redis_lock:pop_and_lock", 1)
+
+      gatekeeper.should_receive(:sleep).exactly(30).times
+      gatekeeper.with_lock("pop_and_lock", 1) {}
+
+    end
+  end
+
+end

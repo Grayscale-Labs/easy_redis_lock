@@ -3,18 +3,14 @@ require 'URI'
 require 'redis'
 
 module EasyRedisLock
-  class Gatekeeper
-    attr_reader :delay
+  class GateKeeper
+    attr_reader :delay, :redis
 
-    REDIS_URL = URI.parse(ENV.fetch('REDIS_URL') {'redis://localhost:6379'} )
-    REDIS_HOST = REDIS_URL.host
-    REDIS_PORT = REDIS_URL.port
-
-    def initialize delay=1500 # ms
+    def initialize delay=1500
       @delay = delay
       @seconds_delay = (delay.to_f / 1000.0)
-      @redis = Redis.new(:host => REDIS_HOST, :port => REDIS_PORT)
-      @lock_time = 30000 #ms
+      @redis = Redis.new(redis_options)
+      @lock_time = 30#s
     end
 
     def should_delay? delay_id
@@ -33,7 +29,7 @@ module EasyRedisLock
         while should_delay?(delay_id) do
           sleep(delay)
           retries += 1
-          expire_lock(delay_id) and return if retries > 30
+          break if retries >= 30
         end
         mark_in_progress(delay_id)
         yield if block_given?
@@ -44,6 +40,11 @@ module EasyRedisLock
 
     private
 
+    def redis_options
+      url = URI.parse(ENV.fetch('REDIS_URL') {'redis://localhost:6379'} )
+      { :host => url.host, :port => url.port }
+    end
+
     def expire_lock delay_id
       @redis.del("redis_lock:#{delay_id}")
     end
@@ -53,7 +54,7 @@ module EasyRedisLock
     end
 
     def set_progress delay_id
-      @redis.psetex("redis_lock:#{delay_id}", @lock_time, 1) # auto expires after lock_time seconds (default 30s)
+      @redis.setex("redis_lock:#{delay_id}", @lock_time, 1) # auto expires after lock_time seconds (default 30s)
     end
   end
 end
