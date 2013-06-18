@@ -19,7 +19,7 @@ Or install it yourself as:
 ## Usage
 
   Easy Usage:
-  ```
+  ```ruby
   EasyRedisLock::GateKeeper.new.with_lock("unique_lock_key") { # code to wrap in the redis lock }
   ```
 
