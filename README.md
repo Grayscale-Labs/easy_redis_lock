@@ -19,7 +19,9 @@ Or install it yourself as:
 ## Usage
 
   Easy Usage:
-  ```EasyRedisLock::GateKeeper.new.with_lock("unique_lock_key") { # code to wrap in the redis lock }
+  ```
+  EasyRedisLock::GateKeeper.new.with_lock("unique_lock_key") { # code to wrap in the redis lock }
+  ```
 
 ## Contributing
 
