@@ -9,8 +9,8 @@ module EasyRedisLock
     def initialize delay=1500
       @delay = delay
       @seconds_delay = (delay.to_f / 1000.0)
-      @redis = Redis.new(redis_options)
       @lock_time = 30#s
+      open_connection!
     end
 
     def should_delay? delay_id
@@ -38,12 +38,24 @@ module EasyRedisLock
       end
     end
 
+    def cleanup
+      close_connection
+    end
+
     private
 
-    def redis_options
-      url = URI.parse(ENV.fetch('REDIS_URL') {'redis://localhost:6379'} )
-      { :host => url.host, :port => url.port }
+    def open_connection!
+      @redis = Redis.connect
     end
+
+    def close_connection!
+      @redis.quit
+    end
+
+    # def redis_options
+    #   url = URI.parse(ENV.fetch('REDIS_URL') {'redis://localhost:6379'} )
+    #   { :host => url.host, :port => url.port }
+    # end
 
     def expire_lock delay_id
       @redis.del("easy_redis_lock:#{delay_id}")
