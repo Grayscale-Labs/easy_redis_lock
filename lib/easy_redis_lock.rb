@@ -39,7 +39,7 @@ module EasyRedisLock
     end
 
     def cleanup
-      close_connection
+      close_connection!
     end
 
     private
