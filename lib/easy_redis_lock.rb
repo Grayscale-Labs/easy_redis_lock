@@ -10,7 +10,7 @@ module EasyRedisLock
       @delay = delay
       @seconds_delay = (delay.to_f / 1000.0)
       @lock_time = 30#s
-      open_connection!
+      @redis = Redis.connect
     end
 
     def should_delay? delay_id
@@ -43,10 +43,6 @@ module EasyRedisLock
     end
 
     private
-
-    def open_connection!
-      @redis = Redis.connect
-    end
 
     def close_connection!
       @redis.quit
