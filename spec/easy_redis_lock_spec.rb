@@ -13,6 +13,20 @@ describe EasyRedisLock::GateKeeper do
     gatekeeper.should_delay?("not_locked_key").should be_false
   end
 
+  context "redis provided" do
+    it "uses that redis connection" do
+      keeper = EasyRedisLock::GateKeeper.new(:redis => Redis.new(:host => "someredishost", :port => 6379))
+      expect(keeper.redis.client.host).to eql("someredishost")
+    end
+  end
+
+  context "redis not provided" do
+    it "creates a redis connection" do
+      keeper = EasyRedisLock::GateKeeper.new
+      expect(keeper.redis.client.host).to eql("127.0.0.1")
+    end
+  end
+
   context "#with_lock" do
     it "should sleep the delay time if required" do
       gatekeeper.redis.set("easy_redis_lock:pop_and_lock", 1)
